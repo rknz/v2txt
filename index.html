@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Talk & Translate</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #e9ecef;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .app-container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      padding: 30px;
+    }
+    h2 {
+      font-weight: bold;
+    }
+    textarea {
+      resize: none;
+    }
+    .btn, select {
+      border-radius: 8px !important;
+    }
+    .char-buttons button {
+      margin: 3px;
+      border-radius: 6px;
+    }
+    .control-panel {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    @media (max-width: 576px) {
+      .control-panel {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <h2 class="text-center mb-4 text-primary">🎤 Talk & Translate</h2>
+    <div class="row mb-3">
+      <div class="col">
+        <label for="inputLang" class="form-label">Input Language</label>
+        <select id="inputLang" class="form-select">
+          <option value="auto">Auto Detect</option>
+          <option value="en">English</option>
+          <option value="bn">Bengali</option>
+        </select>
+      </div>
+      <div class="col">
+        <label for="outputLang" class="form-label">Translate To</label>
+        <select id="outputLang" class="form-select">
+          <option value="en">English</option>
+          <option value="bn">Bengali</option>
+        </select>
+      </div>
+    </div>
+
+    <label for="inputText" class="form-label">Input</label>
+    <textarea id="inputText" class="form-control mb-3" rows="7" placeholder="Enter text or use the microphone..."></textarea>
+
+    <div class="control-panel mb-3">
+      <div>
+        <button type="button" onclick="startDictation()" class="btn btn-primary">🎤 Start</button>
+        <button type="button" onclick="clearInput()" class="btn btn-danger">Clear</button>
+        <button type="button" onclick="translateText()" class="btn btn-success">Translate</button>
+      </div>
+      <div>
+        <button type="button" onclick="copyInput()" class="btn btn-outline-secondary">📋 Copy Input</button>
+        <button type="button" onclick="copyOutput()" class="btn btn-outline-secondary">📋 Copy Output</button>
+      </div>
+    </div>
+
+    <div class="char-buttons mb-3">
+      <label class="form-label">Insert Punctuation:</label><br/>
+      <button type="button" onclick="insertChar('.')" class="btn btn-light">.</button>
+      <button type="button" onclick="insertChar(',')" class="btn btn-light">,</button>
+      <button type="button" onclick="insertChar('?')" class="btn btn-light">?</button>
+      <button type="button" onclick="insertChar('!')" class="btn btn-light">!</button>
+      <button type="button" onclick="insertChar(';')" class="btn btn-light">;</button>
+      <button type="button" onclick="insertChar(':')" class="btn btn-light">:</button>
+    </div>
+
+    <label for="outputText" class="form-label">Translated Output</label>
+    <textarea id="outputText" class="form-control" rows="4" placeholder="Translation will appear here..." readonly></textarea>
+  </div>
+
+  <script>
+    function startDictation() {
+      if ('webkitSpeechRecognition' in window) {
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = document.getElementById('inputLang').value || 'en-US';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => console.log('Speech recognition started');
+        recognition.onresult = function(event) {
+          document.getElementById('inputText').value += (document.getElementById('inputText').value ? " " : "") + event.results[0][0].transcript;
+        };
+        recognition.onerror = function(event) {
+          console.error('Speech recognition error:', event.error);
+          alert('Speech recognition error: ' + event.error);
+        };
+
+        recognition.start();
+      } else {
+        alert('Speech Recognition is not supported in this browser. Please use Google Chrome.');
+      }
+    }
+
+    function clearInput() {
+      document.getElementById('inputText').value = '';
+      document.getElementById('outputText').value = '';
+    }
+
+    function insertChar(char) {
+      const input = document.getElementById('inputText');
+      input.value += char;
+    }
+
+    function copyInput() {
+      navigator.clipboard.writeText(document.getElementById('inputText').value);
+    }
+
+    function copyOutput() {
+      navigator.clipboard.writeText(document.getElementById('outputText').value);
+    }
+
+    async function translateText() {
+      const text = document.getElementById('inputText').value;
+      const source = document.getElementById('inputLang').value;
+      const target = document.getElementById('outputLang').value;
+      if (!text.trim()) {
+        alert("Please enter text to translate.");
+        return;
+      }
+      try {
+        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${source}&tl=${target}&dt=t&q=${encodeURIComponent(text)}`);
+        const data = await res.json();
+        document.getElementById('outputText').value = data[0].map(item => item[0]).join('');
+      } catch (error) {
+        alert('Translation failed. Please check your internet connection or try again later.');
+      }
+    }
+  </script>
+</body>
+</html>
