@@ -1,77 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Talk & Translate Enhanced</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Talk & Translate</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
     body {
-      background-color: #e9ecef;
+      background-color: #f8f9fa;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     .app-container {
       max-width: 900px;
-      margin: 40px auto;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.1);
-      padding: 30px;
+      margin: auto;
     }
-    h2 {
-      font-weight: bold;
+    .listening {
+      animation: glow 1s infinite alternate;
+      box-shadow: 0 0 12px 5px rgba(0, 123, 255, 0.6);
+      background-color: #007bff !important;
+      color: white;
     }
-    textarea {
-      /* This property enables vertical resizing */
-      resize: vertical; 
-    }
-    .btn, select {
-      border-radius: 8px !important;
-    }
-    .char-buttons button {
-      margin: 3px;
-      border-radius: 6px;
-    }
-    .control-panel {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    .lang-selector {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .lang-selector .col {
-      flex: 1;
-    }
-    #swapLangBtn {
-      padding-top: 2rem; /* Align with select boxes */
-    }
-    @media (max-width: 576px) {
-      .control-panel {
-        flex-direction: column;
+    @keyframes glow {
+      from {
+        box-shadow: 0 0 6px 2px rgba(0, 123, 255, 0.3);
       }
-      .lang-selector {
-        flex-direction: column;
-        gap: 1rem;
+      to {
+        box-shadow: 0 0 16px 8px rgba(0, 123, 255, 0.7);
       }
-      #swapLangBtn {
-        padding-top: 0;
-        align-self: center;
-        transform: rotate(90deg);
-      }
+    }
+    .expandable-text {
+      resize: vertical;
+    }
+    .toast {
+      opacity: 1 !important;
     }
   </style>
 </head>
 <body>
-  <div class="app-container">
-    <h2 class="text-center mb-4 text-primary">🗣️ Talk & Translate</h2>
-    <div class="row mb-3 lang-selector">
-      <div class="col">
+  <div class="app-container container mt-5 p-4 bg-white rounded shadow" role="main">
+    <h2 class="text-center text-primary mb-4">🗣️ Talk & Translate</h2>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
+      <div class="flex-fill">
         <label for="inputLang" class="form-label">Input Language</label>
-        <select id="inputLang" class="form-select">
+        <select id="inputLang" class="form-select" aria-label="Select input language">
           <option value="auto">Auto Detect</option>
           <option value="en">English</option>
           <option value="bn">Bengali</option>
@@ -82,12 +54,14 @@
           <option value="ja">Japanese</option>
         </select>
       </div>
-      <div id="swapLangBtn" class="col-auto">
-         <button type="button" onclick="swapLanguages()" class="btn btn-light" title="Swap Languages">⇄</button>
+
+      <div class="d-flex flex-column justify-content-end">
+        <button type="button" onclick="swapLanguages()" class="btn btn-light mt-4" title="Swap Languages">⇄</button>
       </div>
-      <div class="col">
+
+      <div class="flex-fill">
         <label for="outputLang" class="form-label">Translate To</label>
-        <select id="outputLang" class="form-select">
+        <select id="outputLang" class="form-select" aria-label="Select output language">
           <option value="en">English</option>
           <option value="bn">Bengali</option>
           <option value="es">Spanish</option>
@@ -99,34 +73,107 @@
       </div>
     </div>
 
-    <label for="inputText" class="form-label">Input</label>
-    <textarea id="inputText" class="form-control mb-3" rows="7" placeholder="Enter text or use the microphone..."></textarea>
-
-    <div class="control-panel mb-3">
-      <div>
-        <button type="button" onclick="startDictation()" class="btn btn-primary">🎙️ Start</button>
-        <button type="button" onclick="clearInput()" class="btn btn-danger">Clear</button>
-        <button type="button" onclick="translateText()" class="btn btn-success">Translate</button>
+    <div class="mb-3">
+      <label for="inputText" class="form-label">Input</label>
+      <div class="position-relative">
+        <textarea
+          id="inputText"
+          class="form-control expandable-text"
+          rows="5"
+          aria-label="Input text area"
+          placeholder="Enter text or use the microphone..."
+        ></textarea>
+        <button
+          class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-1"
+          onclick="toggleFullscreen('inputText')"
+          aria-label="Toggle fullscreen for input textarea"
+          title="Toggle fullscreen"
+        >⤢</button>
       </div>
-      <div>
-        <button type="button" onclick="speakOutput()" class="btn btn-info">🔊 Listen</button>
-        <button type="button" onclick="copyInput()" class="btn btn-outline-secondary">📋 Copy Input</button>
-        <button type="button" onclick="copyOutput()" class="btn btn-outline-secondary">📋 Copy Output</button>
+    </div>
+
+    <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+      <div class="d-flex gap-2">
+        <button
+          id="startBtn"
+          type="button"
+          onclick="startDictation()"
+          class="btn btn-primary d-flex align-items-center gap-2"
+          aria-label="Start speech input"
+        >
+          <span
+            class="spinner-border spinner-border-sm d-none"
+            id="micSpinner"
+            role="status"
+            aria-hidden="true"
+          ></span>
+          <span id="micText">🎙️ Start</span>
+        </button>
+        <button type="button" onclick="clearInput()" class="btn btn-danger" aria-label="Clear input">
+          Clear
+        </button>
+        <button
+          id="translateBtn"
+          type="button"
+          onclick="translateText()"
+          class="btn btn-success"
+          aria-label="Translate text"
+        >
+          <span class="spinner-border spinner-border-sm d-none" id="translateSpinner" role="status" aria-hidden="true"></span>
+          Translate
+        </button>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="button" onclick="speakOutput()" class="btn btn-info" aria-label="Listen to output">
+          🔊 Listen
+        </button>
+        <button type="button" onclick="copyInput()" class="btn btn-outline-secondary" aria-label="Copy input text">
+          📋 Copy Input
+        </button>
+        <button type="button" onclick="copyOutput()" class="btn btn-outline-secondary" aria-label="Copy output text">
+          📋 Copy Output
+        </button>
       </div>
     </div>
 
     <div class="char-buttons mb-3">
-      <label class="form-label">Insert Punctuation:</label><br/>
-      <button type="button" onclick="insertChar('.')" class="btn btn-light">.</button>
-      <button type="button" onclick="insertChar(',')" class="btn btn-light">,</button>
-      <button type="button" onclick="insertChar('?')" class="btn btn-light">?</button>
-      <button type="button" onclick="insertChar('!')" class="btn btn-light">!</button>
-      <button type="button" onclick="insertChar(';')" class="btn btn-light">;</button>
-      <button type="button" onclick="insertChar(':')" class="btn btn-light">:</button>
+      <label class="form-label">Insert Punctuation:</label><br />
+      <button type="button" onclick="insertChar('.')"
+        class="btn btn-light">.</button>
+      <button type="button" onclick="insertChar(',')"
+        class="btn btn-light">,</button>
+      <button type="button" onclick="insertChar('?')"
+        class="btn btn-light">?</button>
+      <button type="button" onclick="insertChar('!')"
+        class="btn btn-light">!</button>
+      <button type="button" onclick="insertChar(';')"
+        class="btn btn-light">;</button>
+      <button type="button" onclick="insertChar(':')"
+        class="btn btn-light">:</button>
     </div>
 
-    <label for="outputText" class="form-label">Translated Output</label>
-    <textarea id="outputText" class="form-control" rows="4" placeholder="Translation will appear here..." readonly></textarea>
+    <div class="mb-3">
+      <label for="outputText" class="form-label">Translated Output</label>
+      <div class="position-relative">
+        <textarea
+          id="outputText"
+          class="form-control expandable-text"
+          rows="4"
+          readonly
+          aria-label="Translated output"
+          placeholder="Translation will appear here..."
+        ></textarea>
+        <button
+          class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-1"
+          onclick="toggleFullscreen('outputText')"
+          aria-label="Toggle fullscreen for output textarea"
+          title="Toggle fullscreen"
+        >⤢</button>
+      </div>
+    </div>
+
+    <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
   </div>
 
   <script>
@@ -134,87 +181,180 @@
     const outputLang = document.getElementById('outputLang');
     const inputText = document.getElementById('inputText');
     const outputText = document.getElementById('outputText');
+    const micSpinner = document.getElementById('micSpinner');
+    const micText = document.getElementById('micText');
+    const startBtn = document.getElementById('startBtn');
+    const translateBtn = document.getElementById('translateBtn');
+    const translateSpinner = document.getElementById('translateSpinner');
 
+    // Load saved languages from localStorage or default to Bengali input
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedInput = localStorage.getItem('inputLang');
+      const savedOutput = localStorage.getItem('outputLang');
+
+      if (savedInput && Array.from(inputLang.options).some(opt => opt.value === savedInput)) {
+        inputLang.value = savedInput;
+      } else {
+        inputLang.value = 'bn';
+      }
+
+      if (savedOutput && Array.from(outputLang.options).some(opt => opt.value === savedOutput)) {
+        outputLang.value = savedOutput;
+      }
+
+      // Save selections on change
+      inputLang.addEventListener('change', () => {
+        localStorage.setItem('inputLang', inputLang.value);
+      });
+      outputLang.addEventListener('change', () => {
+        localStorage.setItem('outputLang', outputLang.value);
+      });
+    });
+
+    // Show a toast notification
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
+      toast.setAttribute('role', 'alert');
+      toast.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">${message}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      `;
+      const container = document.getElementById('toastContainer');
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Start speech recognition
     function startDictation() {
       if ('webkitSpeechRecognition' in window) {
         const recognition = new webkitSpeechRecognition();
-        // Use the selected language for dictation, default to 'en-US'
-        recognition.lang = inputLang.value === 'auto' ? 'en-US' : inputLang.value;
+        recognition.lang = inputLang.value === 'auto' ? 'bn-BD' : inputLang.value;
         recognition.continuous = false;
         recognition.interimResults = false;
 
-        recognition.onstart = () => console.log('Speech recognition started');
-        recognition.onresult = function(event) {
-          inputText.value += (inputText.value ? " " : "") + event.results[0][0].transcript;
-        };
-        recognition.onerror = function(event) {
-          console.error('Speech recognition error:', event.error);
-          alert('Speech recognition error: ' + event.error);
+        recognition.onstart = () => {
+          startBtn.classList.add('listening');
+          startBtn.disabled = true;
+          micText.textContent = '🎙️ Listening...';
+          micSpinner.classList.remove('d-none');
         };
 
+        recognition.onresult = event => {
+          inputText.value += (inputText.value ? ' ' : '') + event.results[0][0].transcript;
+        };
+
+        recognition.onerror = event => {
+          alert('Speech recognition error: ' + event.error);
+          resetMic();
+        };
+
+        recognition.onend = () => resetMic();
         recognition.start();
       } else {
-        alert('Speech Recognition is not supported in this browser. Please use Google Chrome.');
+        alert('Speech Recognition is not supported in this browser.');
       }
     }
 
+    // Reset microphone button state
+    function resetMic() {
+      startBtn.classList.remove('listening');
+      startBtn.disabled = false;
+      micText.textContent = '🎙️ Start';
+      micSpinner.classList.add('d-none');
+    }
+
+    // Clear input and output textareas
     function clearInput() {
       inputText.value = '';
       outputText.value = '';
     }
-    
-    // NEW FUNCTION: Swap Languages
+
+    // Swap input and output languages
     function swapLanguages() {
-        if (inputLang.value === 'auto') return; // Cannot swap 'auto'
-        const tempLang = inputLang.value;
-        inputLang.value = outputLang.value;
-        outputLang.value = tempLang;
+      if (inputLang.value === 'auto') return;
+      const temp = inputLang.value;
+      inputLang.value = outputLang.value;
+      outputLang.value = temp;
+      localStorage.setItem('inputLang', inputLang.value);
+      localStorage.setItem('outputLang', outputLang.value);
     }
 
-    // NEW FUNCTION: Text-to-Speech for Output
+    // Speak the translated output
     function speakOutput() {
-        const textToSpeak = outputText.value;
-        if (!textToSpeak.trim()) {
-            alert('There is no output text to listen to.');
-            return;
-        }
-        if ('speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.lang = outputLang.value; // Set the voice to the output language
-            window.speechSynthesis.cancel(); // Cancel any previous speech
-            window.speechSynthesis.speak(utterance);
-        } else {
-            alert('Text-to-Speech is not supported in this browser.');
-        }
+      const text = outputText.value.trim();
+      if (!text) {
+        alert('There is no output text to speak.');
+        return;
+      }
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = outputLang.value;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      } else {
+        alert('Text-to-Speech is not supported in this browser.');
+      }
     }
 
+    // Insert punctuation characters into input
     function insertChar(char) {
       inputText.value += char;
     }
 
+    // Copy input text to clipboard
     function copyInput() {
-      navigator.clipboard.writeText(inputText.value);
+      navigator.clipboard.writeText(inputText.value).then(() => {
+        showToast('Input copied!', 'success');
+      }).catch(() => {
+        showToast('Failed to copy input.', 'danger');
+      });
     }
 
+    // Copy output text to clipboard
     function copyOutput() {
-      navigator.clipboard.writeText(outputText.value);
+      navigator.clipboard.writeText(outputText.value).then(() => {
+        showToast('Output copied!', 'success');
+      }).catch(() => {
+        showToast('Failed to copy output.', 'danger');
+      });
     }
 
+    // Toggle fullscreen mode for textareas
+    function toggleFullscreen(id) {
+      const el = document.getElementById(id);
+      if (!document.fullscreenElement) {
+        el.requestFullscreen().catch(() => {
+          alert('Fullscreen mode is not supported by this browser.');
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // Perform translation via Google Translate unofficial API
     async function translateText() {
-      const text = inputText.value;
-      const source = inputLang.value;
-      const target = outputLang.value;
-      if (!text.trim()) {
-        alert("Please enter text to translate.");
+      const text = inputText.value.trim();
+      if (!text) {
+        alert('Please enter text to translate.');
         return;
       }
+      translateBtn.disabled = true;
+      translateSpinner.classList.remove('d-none');
       try {
-        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${source}&tl=${target}&dt=t&q=${encodeURIComponent(text)}`);
+        const res = await fetch(
+          `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${inputLang.value}&tl=${outputLang.value}&dt=t&q=${encodeURIComponent(text)}`
+        );
         const data = await res.json();
         outputText.value = data[0].map(item => item[0]).join('');
-      } catch (error) {
-        console.error('Translation Error:', error);
-        alert('Translation failed. Please check your internet connection or try again later.');
+      } catch (err) {
+        console.error('Translation error:', err);
+        alert('Translation failed. Check your connection.');
+      } finally {
+        translateBtn.disabled = false;
+        translateSpinner.classList.add('d-none');
       }
     }
   </script>
